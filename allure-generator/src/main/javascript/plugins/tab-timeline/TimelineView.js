@@ -33,6 +33,7 @@ class TimelineView extends BaseChartView {
         this.brush = brushX().on('start brush end', this.onBrushChange.bind(this));
         this.tooltip = new TooltipView({position: 'bottom'});
         this.collection.applyFilterAndSorting(()=>1, this.sorter);
+
         this.minDuration = this.collection.time.minDuration;
         this.maxDuration = this.collection.time.maxDuration;
         this.selectedDuration = this.minDuration;
@@ -110,7 +111,6 @@ class TimelineView extends BaseChartView {
 
     doShow() {
         this.width = this.$el.width() > 2 * PADDING ? this.$el.width() - 2 * PADDING : this.$el.width();
-
         const domain = [this.collection.time.start, this.collection.time.stop];
         this.chartX.domain(domain).range([0, this.width]);
         this.brushX.domain(domain).range([0, this.width]);
@@ -123,7 +123,7 @@ class TimelineView extends BaseChartView {
         height += this.drawTestGroups(this.data, height, group, true);
 
         select(this.$el[0]).select('.timeline__brush')
-            .style('top', () => { return Math.min(this.$el.height() - BRUSH_HEIGHT, height + PADDING) + 'px'; });
+            .style('top', () => { return Math.min(this.$el.height() - BRUSH_HEIGHT, height + 3 * PADDING) + 'px'; });
 
         this.xChartAxis = this.makeAxis(
             axisBottom(),
@@ -191,28 +191,30 @@ class TimelineView extends BaseChartView {
                         .text((d) => d.name)
                         .attr('class', 'timeline__group_title');
                     this.bindTooltip(text);
-                    groupHeight = BAR_HEIGHT + BAR_GAP;
+                    groupHeight = BAR_HEIGHT/4 + BAR_GAP;
                     offset += groupHeight;
                 }
-
                 offset += this.drawTestGroups(item.children, groupHeight, group, false);
+
             });
-            offset += this.drawTestResults(items.filter((item) => !item.children), parent, offset);
-            return offset;
+        offset += this.drawTestResults(items.filter((item) => !item.children), parent, offset);
+        return offset;
+
     }
 
-    drawTestResults(items, parent) {
+    drawTestResults(items, parent, offset) {
         if (items.length) {
             let bars = parent
                 .selectAll('.timeline__item')
                 .data(items).enter()
                 .append('a')
-                .attr('xlink:href', d => '#testresult/' + d.uid)
+                .attr('transform', `translate(0, ${offset})`)
+                .attr('xlink:href', d => `/testresult/${d.uid}`)
                 .append('rect')
                 .attrs({
                     'class': d => `timeline__item chart__fill_status_${d.status}`,
-                    x: d => this.chartX(d.time.start),
-                    width: d => this.chartX(d.time.start + d.time.duration),
+                    x: d => this.chartX(d.start),
+                    width: d => this.chartX(d.start + d.duration),
                     rx: 2,
                     ry: 2,
                     height: BAR_HEIGHT
@@ -226,8 +228,8 @@ class TimelineView extends BaseChartView {
 
     onBrushChange() {
         const selection = currentEvent.selection;
-        const start = (d) => Math.max(0, Math.min(this.chartX(d.time.start), this.width));
-        const stop =  (d) => Math.max(0, Math.min(this.chartX(d.time.stop), this.width));
+        const start = (d) => Math.max(0, Math.min(this.chartX(d.start), this.width));
+        const stop =  (d) => Math.max(0, Math.min(this.chartX(d.stop), this.width));
 
         if (selection) {
             this.chartX.domain(selection.map(this.brushX.invert, this.brushX));
@@ -248,7 +250,7 @@ class TimelineView extends BaseChartView {
 
     getTooltipContent(d) {
         return escape`${d.name}<br>
-            ${duration(this.timeOffset(d.time.start))} — ${duration(this.timeOffset(d.time.stop))}`;
+            ${duration(this.timeOffset(d.start))} — ${duration(this.timeOffset(d.stop))}`;
     }
 }
 
