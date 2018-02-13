@@ -53,7 +53,7 @@ Please note that this project is released with a [Contributor Code of Conduct][C
 ## Contributors
 
 This project exists thanks to all the people who contribute. [[Contribute]](.github/CONTRIBUTING.md).
-<a href=""><img src="https://opencollective.com/allure-report/contributors.svg?width=890" /></a>
+<a href="/allure-framework/allure2/graphs/contributors"><img src="https://opencollective.com/allure-report/contributors.svg?width=890" /></a>
 
 
 ## Backers
